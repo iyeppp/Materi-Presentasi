@@ -55,34 +55,62 @@ Bagaimana aplikasi bekerja dari ujung ke ujung:
 
 ## Slide 5: Komponen OOP dalam Sistem - Encapsulation (Pengkapsulan)
 **Definisi:** Menyembunyikan detail data dan hanya mengizinkan akses melalui metode tertentu.
-**Penerapan dalam Sistem:**
-- **Penggunaan Model & Entitas:** Kelas seperti `CalorieLog` dan `ForumThread` memiliki atribut *private* (`private UUID id`, `private String title`). Atribut ini hanya bisa dibaca/diubah melalui metode *getter* dan *setter*.
-- **Penggunaan DTO (Data Transfer Object):** Struktur database internal dienkapsulasi dan tidak dibocorkan ke *client*. Data difilter dan dikemas ke dalam kelas `CalorieRequest` atau `ForumThreadResponse` yang hanya berisi field yang boleh dikonsumsi publik.
+**Daftar Lengkap File yang Menerapkan:**
+- **Seluruh Kelas Entitas Database (Folder `model/`):**
+  - `auth/model/UserProfile.java`
+  - `calculator/model/CalcHistory.java`
+  - `calories/model/CalorieLog.java`
+  - `forum/model/ForumThread.java`
+  - `forum/model/ForumReply.java`
+  - `nutrition/model/Nutrition.java`
+- **Seluruh Kelas Objek Transfer Data (Folder `dto/`):**
+  - `auth/dto/UserProfileResponse.java`
+  - `auth/dto/ApiResponse.java`
+  - `calculator/dto/CalcHistoryRequest.java`, `CalcHistoryResponse.java`
+  - `calories/dto/CalorieRequest.java`, `CalorieResponse.java`
+  - `forum/dto/ForumThreadRequest.java`, `ForumThreadResponse.java`
+  - `forum/dto/ForumReplyRequest.java`, `ForumReplyResponse.java`
+- **Penjelasan Teknis:** Pada file-file Model dan DTO di atas, semua atribut (seperti `title`, `calories`, `userId`) dienkapsulasi menggunakan access modifier `private`. Kelas di luar tidak bisa mengubah nilainya sembarangan. Akses harus melewati pintu resmi yaitu metode *Getter* dan *Setter* (yang di-generate menggunakan `@Data` dari Lombok).
 
 ---
 
 ## Slide 6: Komponen OOP dalam Sistem - Abstraction (Abstraksi)
 **Definisi:** Menyembunyikan kompleksitas implementasi dan hanya menampilkan fitur-fitur esensial.
-**Penerapan dalam Sistem:**
-- **Interface di Repository:** Penggunaan Spring Data JPA di mana kita hanya mendefinisikan interface (contoh: `CalorieLogRepository extends JpaRepository`). Logika dasar query SQL seperti `INSERT`, `SELECT`, `UPDATE` diabstraksi total oleh framework, sehingga developer cukup menggunakan metode `.save()`, `.findAll()`, dll.
-- **REST Controller:** Klien (Frontend) diabstraksi dari cara backend memproses data; klien hanya perlu memanggil *endpoint URL* yang disediakan.
+**Daftar Lengkap File yang Menerapkan:**
+- **Seluruh Kelas Antarmuka Akses Data (Folder `repository/`):**
+  - `auth/repository/UserProfileRepository.java`
+  - `calculator/repository/CalcHistoryRepository.java`
+  - `calories/repository/CalorieLogRepository.java`
+  - `forum/repository/ForumThreadRepository.java`
+  - `forum/repository/ForumReplyRepository.java`
+  - `nutrition/repository/NutritionRepository.java`
+- **Penjelasan Teknis:** File-file repository di atas berbentuk `interface`. Mereka mengabstraksikan dan menyembunyikan kerumitan penulisan query SQL (seperti *INSERT*, *SELECT*) di balik method abstrak sederhana bawaan dari Spring Data JPA, sehingga Service tidak perlu tahu detail implementasi *database*-nya.
 
 ---
 
 ## Slide 7: Komponen OOP dalam Sistem - Polymorphism (Polimorfisme)
-**Definisi:** Kemampuan suatu objek atau metode untuk mengambil banyak bentuk.
-**Penerapan dalam Sistem:**
-- **Interface-Implementation Pattern di Layer Service:** Adanya interface `CalorieService` yang berisi kerangka/kontrak metode (seperti `addCalorieLog()`), lalu metode tersebut direalisasikan isinya secara spesifik pada kelas `CalorieServiceImpl`. 
-- **Keuntungan:** Controller hanya berinteraksi dengan tipe (bentuk) antarmuka abstrak (`CalorieService`), tanpa peduli bentuk konkret/implementasi aslinya. Hal ini sangat memudahkan modifikasi dan *unit testing* di kemudian hari.
+**Definisi:** Kemampuan suatu objek atau metode untuk mengambil banyak bentuk (Pattern Interface-Implementation).
+**Daftar Lengkap File yang Menerapkan:**
+- **Seluruh Kelas Layanan Bisnis (Folder `service/`):**
+  - `auth/service/AuthService.java` **(Interface)** ➡️ `AuthServiceImpl.java` **(Implementasi)**
+  - `calculator/service/CalculatorService.java` ➡️ `CalculatorServiceImpl.java`
+  - `calories/service/CalorieService.java` ➡️ `CalorieServiceImpl.java`
+  - `forum/service/ForumThreadService.java` ➡️ `ForumThreadServiceImpl.java`
+  - `nutrition/service/NutritionService.java` ➡️ `NutritionServiceImpl.java`
+- **Penjelasan Teknis:** Ini adalah wujud polimorfisme di mana Controller di layer atas cukup memanggil *Interface* (contoh: `CalorieService`), tanpa mempedulikan bentuk konkrit implementasinya. Spring Boot akan secara dinamis menyuntikkan (inject) wujud nyatanya yaitu kelas `CalorieServiceImpl` saat program berjalan (*runtime*).
 
 ---
 
 ## Slide 8: Komponen OOP dalam Sistem - Inheritance (Pewarisan)
 **Definisi:** Kelas turunan mewarisi atribut dan metode dari kelas induk.
-**Penerapan dalam Sistem:**
-- **Layer Repository:** Semua *Interface Repository* (contoh: `ForumThreadRepository`) mewarisi fitur-fitur bawaan dari induknya `JpaRepository<T, ID>`. Sehingga mereka mendapatkan puluhan metode standar pencarian data secara gratis tanpa perlu ditulis ulang.
-- **Penanganan Exception Global:** Kelas-kelas *Error/Exception* kustom aplikasi (jika ada) mewarisi sifat dari `RuntimeException`.
-- **Komponen Frontend (React):** Di frontend (OOP di sisi JS), arsitektur berbasis komponen di mana fungsionalitas UI yang lebih kompleks dapat menggunakan atau merangkai properti-properti turunan dari komponen UI dasar.
+**Daftar Lengkap File yang Menerapkan:**
+- **Pewarisan pada Layer Repository (`extends JpaRepository`):**
+  - `calories/repository/CalorieLogRepository.java` 
+  - `forum/repository/ForumThreadRepository.java` 
+  - Serta file repository lainnya.
+- **Pewarisan pada Penanganan Error Global:**
+  - Kelas exception khusus dalam sistem seperti mewarisi sifat dari `RuntimeException`.
+- **Penjelasan Teknis:** Pewarisan (*Inheritance*) diterapkan luas di kelas Repository. Sebagai contoh `CalorieLogRepository` di-deklarasikan dengan `extends JpaRepository<CalorieLog, UUID>`. Melalui pewarisan ini, repository turunan tersebut secara otomatis mewarisi puluhan metode bawaan (seperti `findAll()`, `save()`, `deleteById()`) dari induknya tanpa harus ditulis satu per satu.
 
 ---
 
